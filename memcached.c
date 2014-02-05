@@ -3846,7 +3846,14 @@ static void drive_machine(conn *c) {
     static int  use_accept4 = 0;
 #endif
 
+    static int cork = 1;
+    static int uncork = 0;
+
     assert(c != NULL);
+
+    if (!IS_UDP(c->transport) && c->state != conn_listening) {
+        setsockopt(c->sfd, IPPROTO_TCP, TCP_CORK, &cork, sizeof(cork)); 
+    }
 
     while (!stop) {
 
@@ -4169,6 +4176,10 @@ static void drive_machine(conn *c) {
             assert(false);
             break;
         }
+    }
+
+    if (!IS_UDP(c->transport) && c->state != conn_listening) {
+        setsockopt(c->sfd, IPPROTO_TCP, TCP_CORK, &uncork, sizeof(uncork)); 
     }
 
     return;
